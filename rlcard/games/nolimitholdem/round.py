@@ -10,10 +10,11 @@ class Action(Enum):
     CHECK_CALL = 1
     #CALL = 2
     # RAISE_3BB = 3
-    RAISE_HALF_POT = 2
-    RAISE_POT = 3
+    RAISE_QUARTER_POT = 2
+    RAISE_HALF_POT = 3
+    RAISE_POT = 4
     # RAISE_2POT = 5
-    ALL_IN = 4
+    ALL_IN = 5
     # SMALL_BLIND = 7
     # BIG_BLIND = 8
 
@@ -99,6 +100,12 @@ class NolimitholdemRound:
             self.raised[self.game_pointer] += quantity
             player.bet(chips=quantity)
             self.not_raise_num = 1
+        
+        elif action == Action.RAISE_QUARTER_POT:
+            quantity = int(self.dealer.pot / 4)
+            self.raised[self.game_pointer] += quantity
+            player.bet(chips=quantity)
+            self.not_raise_num = 1
 
         elif action == Action.FOLD:
             player.status = PlayerStatus.FOLDED
@@ -142,6 +149,7 @@ class NolimitholdemRound:
         diff = max(self.raised) - self.raised[self.game_pointer]
         # If the current player has no more chips after call, we cannot raise
         if diff > 0 and diff >= player.remained_chips:
+            full_actions.remove(Action.RAISE_QUARTER_POT)
             full_actions.remove(Action.RAISE_HALF_POT)
             full_actions.remove(Action.RAISE_POT)
             full_actions.remove(Action.ALL_IN)
@@ -153,11 +161,17 @@ class NolimitholdemRound:
             if int(self.dealer.pot / 2) > player.remained_chips:
                 full_actions.remove(Action.RAISE_HALF_POT)
 
+            if int(self.dealer.pot / 4) > player.remained_chips:
+                full_actions.remove(Action.RAISE_QUARTER_POT)
+
             # Can't raise if the total raise amount is leq than the max raise amount of this round
             # If raise by pot, there is no such concern
             if Action.RAISE_HALF_POT in full_actions and \
                 int(self.dealer.pot / 2) + self.raised[self.game_pointer] <= max(self.raised):
                 full_actions.remove(Action.RAISE_HALF_POT)
+            if Action.RAISE_QUARTER_POT in full_actions and \
+                int(self.dealer.pot / 4) + self.raised[self.game_pointer] <= max(self.raised):
+                full_actions.remove(Action.RAISE_QUARTER_POT)
 
         return full_actions
 
