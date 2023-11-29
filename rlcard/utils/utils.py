@@ -198,15 +198,16 @@ def remove_illegal(action_probs, legal_actions):
     return probs
 
 def tournament(env, num):
-    ''' Evaluate he performance of the agents in the environment
+    ''' Evaluate the performance of the agents in the environment
 
     Args:
         env (Env class): The environment to be evaluated.
         num (int): The number of games to play.
 
     Returns:
-        A list of avrage payoffs for each player
+        A tuple containing a list of win rates for each player and a list of average payoffs for each player
     '''
+    wins = [0 for _ in range(env.num_players)]
     payoffs = [0 for _ in range(env.num_players)]
     counter = 0
     while counter < num:
@@ -214,15 +215,20 @@ def tournament(env, num):
         if isinstance(_payoffs, list):
             for _p in _payoffs:
                 for i, _ in enumerate(payoffs):
+                    if _p[i] > 0:
+                        wins[i] += 1
                     payoffs[i] += _p[i]
                 counter += 1
         else:
             for i, _ in enumerate(payoffs):
+                if _payoffs[i] > 0:
+                    wins[i] += 1
                 payoffs[i] += _payoffs[i]
             counter += 1
     for i, _ in enumerate(payoffs):
+        wins[i] /= counter
         payoffs[i] /= counter
-    return payoffs
+    return (wins, payoffs)
 
 def plot_curve(csv_path, save_path, algorithm):
     ''' Read data from csv file and plot the results
@@ -232,16 +238,23 @@ def plot_curve(csv_path, save_path, algorithm):
     import matplotlib.pyplot as plt
     with open(csv_path) as csvfile:
         reader = csv.DictReader(csvfile)
-        xs = []
-        ys = []
+        episodes = []
+        win_rates = []
+        expected_earnings = []
         for row in reader:
-            xs.append(int(row['episode']))
-            ys.append(float(row['reward']))
-        fig, ax = plt.subplots()
-        ax.plot(xs, ys, label=algorithm)
-        ax.set(xlabel='episode', ylabel='reward')
-        ax.legend()
-        ax.grid()
+            episodes.append(int(row['episode']))
+            win_rates.append(float(row['win rate']))
+            expected_earnings.append(float(row['expected earnings']))
+        fig, (ax1, ax2) = plt.subplots(2, 1)
+        ax1.plot(episodes, win_rates, label=algorithm)
+        ax1.set(xlabel='episode', ylabel='win rate')
+        ax1.legend()
+        ax1.grid()
+        ax2.plot(episodes, expected_earnings, label=algorithm)
+        ax2.set(xlabel='episode', ylabel='expected earnings')
+        ax2.legend()
+        ax2.grid()
+        plt.tight_layout()
 
         save_dir = os.path.dirname(save_path)
         if not os.path.exists(save_dir):

@@ -23,7 +23,7 @@ class Logger(object):
 
         self.txt_file = open(self.txt_path, 'w')
         self.csv_file = open(self.csv_path, 'w')
-        fieldnames = ['episode', 'reward']
+        fieldnames = ['episode', 'win rate', 'expected earnings']
         self.writer = csv.DictWriter(self.csv_file, fieldnames=fieldnames)
         self.writer.writeheader()
 
@@ -38,18 +38,20 @@ class Logger(object):
         self.txt_file.flush()
         print(text)
 
-    def log_performance(self, episode, reward):
+    def log_performance(self, episode, win_rate, expected_earnings):
         ''' Log a point in the curve
         Args:
             episode (int): the episode of the current point
-            reward (float): the reward of the current point
+            win_rate (float): the win rate of the current point
+            expected_earnings (float): the expected earnings of the current point
         '''
-        self.writer.writerow({'episode': episode, 'reward': reward})
+        self.writer.writerow({'episode': episode, 'win rate': win_rate, 'expected earnings': expected_earnings})
         print('')
-        self.log('----------------------------------------')
-        self.log('  episode      |  ' + str(episode))
-        self.log('  reward       |  ' + str(reward))
-        self.log('----------------------------------------')
+        self.log('--------------------------------------------------')
+        self.log('   episode                |   ' + str(episode))
+        self.log('   win rate               |   ' + str(win_rate))
+        self.log('   expected earnings      |   ' + str(expected_earnings))
+        self.log('--------------------------------------------------')
 
     def __exit__(self, type, value, traceback):
         if self.txt_path is not None:
